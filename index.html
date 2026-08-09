@@ -186,7 +186,7 @@
       <!-- Section Info Bar -->
       <div class="flex items-center justify-between mb-3">
         <span id="pwaCountText" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-          6 Mobile Apps Available
+          5 Mobile Apps Available
         </span>
         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
           PWA Offline Ready
@@ -199,7 +199,7 @@
       </div>
 
       <!-- App List View (Default) -->
-      <div id="listContainer" class="flex flex-col gap-2.5 transition-all">
+      <div id="listContainer" class="flex flex-col gap-1.5 transition-all">
         <!-- Rendered dynamically -->
       </div>
 
@@ -510,28 +510,16 @@
         badge: 'Finance'
       },
       {
-        id: 'paypulse',
-        name: 'Paypulse',
+        id: 'qrcode',
+        name: 'QR Paypulse',
         slug: 'https://arunsringeri318.github.io/Arun_Paypulse/',
         category: 'finance',
-        icon: 'activity',
-        iconUrl: 'https://www.flaticon.com/icon/9493583',
-        bgColor: 'from-cyan-500 to-blue-600',
-        shadowColor: 'rgba(6, 182, 212, 0.4)',
-        desc: 'Financial payments dashboard and pulse tracking manager for daily transactions.',
-        badge: 'Pay'
-      },
-      {
-        id: 'qrcode',
-        name: 'QR Studio',
-        slug: 'qr-code',
-        category: 'tools',
         icon: 'qr-code',
-        iconUrl: '',
+        iconUrl: 'https://www.flaticon.com/free-icon/security_670566',
         bgColor: 'from-rose-500 to-pink-600',
         shadowColor: 'rgba(244, 63, 94, 0.4)',
         desc: 'Generate, customize, and scan QR codes for Wi-Fi credentials, URLs, contact cards, and plain text offline.',
-        badge: 'Utility'
+        badge: 'Pay'
       },
       {
         id: 'vault',
@@ -551,7 +539,7 @@
     
     // Load active apps list from localStorage or initialize with defaults
     let appsData = loadAppsData();
-    let userFavorites = JSON.parse(localStorage.getItem('arun_fav_apps') || '["quickbill", "fintrack", "paypulse"]');
+    let userFavorites = JSON.parse(localStorage.getItem('arun_fav_apps') || '["quickbill", "fintrack"]');
     let currentCategory = 'all';
     let currentViewMode = 'list'; 
     let selectedApp = null;
@@ -561,8 +549,9 @@
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // Sync Pass Vault defaults if present
-          const vaultApp = parsed.find(a => a.id === 'vault');
+          // Filter out paypulse and update Pass Vault / QR Paypulse defaults if needed
+          const filtered = parsed.filter(a => a.id !== 'paypulse');
+          const vaultApp = filtered.find(a => a.id === 'vault');
           if (vaultApp) {
             if (!vaultApp.iconUrl || vaultApp.iconUrl === '') {
               vaultApp.iconUrl = 'https://www.flaticon.com/icon/670566';
@@ -571,7 +560,13 @@
               vaultApp.slug = 'https://arunsringeri318.github.io/vault/';
             }
           }
-          return parsed;
+          const qrApp = filtered.find(a => a.id === 'qrcode');
+          if (qrApp) {
+            qrApp.name = 'QR Paypulse';
+            qrApp.slug = 'https://arunsringeri318.github.io/Arun_Paypulse/';
+            qrApp.iconUrl = 'https://www.flaticon.com/free-icon/security_670566';
+          }
+          return filtered;
         } catch (e) {
           console.error('Failed to parse saved apps', e);
         }
@@ -728,12 +723,12 @@
 
         // 2. Render List Dashboard Row
         const listCard = document.createElement('div');
-        listCard.className = 'glass-panel p-3 rounded-2xl flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-500/50 transition-all';
+        listCard.className = 'glass-panel p-2 rounded-xl flex items-center justify-between gap-2.5 cursor-pointer hover:border-indigo-500/50 transition-all';
         listCard.onclick = () => openDrawer(app);
         listCard.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-14 h-14 flex items-center justify-center shrink-0 p-1">
-              ${renderAppIconHtml(app, 'w-11 h-11')}
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-10 h-10 flex items-center justify-center shrink-0 p-0.5">
+              ${renderAppIconHtml(app, 'w-8 h-8')}
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
@@ -744,8 +739,8 @@
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0">
-            <button onclick="event.stopPropagation(); launchAppDirect('${appUrl}')" class="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all">
-              <i data-lucide="external-link" class="w-4 h-4"></i>
+            <button onclick="event.stopPropagation(); launchAppDirect('${appUrl}')" class="p-1.5 rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
             </button>
           </div>
         `;
