@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Arun's Apps Launcher v2.0</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts (Plus Jakarta Sans) -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            mobileBg: '#05070c',
+            mobileCard: 'rgba(18, 24, 38, 0.75)',
+            accentBlue: '#38bdf8',
+            accentPurple: '#a855f7',
+            accentGreen: '#10b981',
+            accentRose: '#f43f5e',
+            accentAmber: '#f59e0b',
+          },
+          keyframes: {
+            slideUp: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            }
+          },
+          animation: {
+            'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030408;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-panel {
+      background: rgba(15, 22, 36, 0.75);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-dock {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .app-icon-squircle {
+      border-radius: 22px;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .app-icon-squircle:active {
+      transform: scale(0.90);
+    }
+    .app-icon-squircle:hover {
+      transform: translateY(-4px) scale(1.06);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="text-slate-100 flex justify-center items-center min-h-screen p-0 sm:p-4 md:p-6 overflow-x-hidden">
+
+  <div id="phoneShell" class="w-full max-w-[430px] h-[100vh] sm:h-[880px] bg-mobileBg sm:rounded-[48px] border-0 sm:border-[8px] sm:border-slate-800 shadow-2xl relative flex flex-col overflow-hidden">
+    
+    <!-- App Header -->
+    <header class="px-5 pt-6 pb-2 z-20 shrink-0">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center text-white font-extrabold text-base shadow-lg shadow-indigo-500/20 border border-white/20">
+            A
+          </div>
+          <div>
+            <h1 id="greetingText" class="text-sm font-bold text-white tracking-tight">Good Day, Arun! 👋</h1>
+            <p class="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Arun's App Suite
+              <span class="px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 text-[9px] font-mono font-bold border border-indigo-500/30">v2.0</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-1.5">
+          <button id="fullscreenToggleBtn" onclick="toggleFullscreen()" class="p-2.5 rounded-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 transition-all border border-slate-700/50 cursor-pointer" title="Toggle Fullscreen">
+            <i data-lucide="maximize" class="w-4 h-4"></i>
+          </button>
+          <button onclick="openSettingsModal()" class="p-2.5 rounded-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 transition-all border border-slate-700/50 cursor-pointer" title="Settings">
+            <i data-lucide="settings" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Bar & Controls -->
+      <div class="flex items-center gap-2 mb-3">
+        <div class="relative flex-1">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Search Arun's apps..." 
+            oninput="handleSearch()"
+            class="w-full bg-slate-900/90 border border-slate-800 focus:border-indigo-500 rounded-2xl pl-10 pr-9 py-2 text-xs text-white placeholder-slate-500 outline-none transition-all shadow-inner"
+          >
+          <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- View Switcher Toggle -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1 gap-1">
+          <button id="viewBtnGrid" onclick="switchView('grid')" class="p-1.5 rounded-xl text-indigo-400 bg-slate-800 transition-all" title="Grid View">
+            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+          </button>
+          <button id="viewBtnList" onclick="switchView('list')" class="p-1.5 rounded-xl text-slate-500 hover:text-slate-300 transition-all" title="List View">
+            <i data-lucide="list" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Categories Pills Horizontal Scroll -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+        <button onclick="filterCategory('all')" data-cat="all" class="cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-600 text-white shadow-md shadow-indigo-600/30 whitespace-nowrap transition-all cursor-pointer">
+          All Apps
+        </button>
+        <button onclick="filterCategory('fav')" data-cat="fav" class="cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-800/80 text-slate-400 hover:text-slate-200 whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer">
+          <i data-lucide="star" class="w-3 h-3 text-amber-400 fill-current"></i> Favorites
+        </button>
+        <button onclick="filterCategory('finance')" data-cat="finance" class="cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-800/80 text-slate-400 hover:text-slate-200 whitespace-nowrap transition-all cursor-pointer">
+          💳 Finance
+        </button>
+        <button onclick="filterCategory('tools')" data-cat="tools" class="cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-800/80 text-slate-400 hover:text-slate-200 whitespace-nowrap transition-all cursor-pointer">
+          🛠️ Utilities
+        </button>
+        <button onclick="filterCategory('security')" data-cat="security" class="cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-800/80 text-slate-400 hover:text-slate-200 whitespace-nowrap transition-all cursor-pointer">
+          🔐 Security
+        </button>
+      </div>
+    </header>
+
+    <main id="mainScroll" class="flex-1 overflow-y-auto px-5 pt-2 pb-24 no-scrollbar">
+      <div class="flex items-center justify-between mb-3">
+        <span id="pwaCountText" class="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          7 Mobile Apps Available
+        </span>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          PWA Offline Ready
+        </span>
+      </div>
+
+      <!-- App Grid View (Default in v2.0) -->
+      <div id="gridContainer" class="grid grid-cols-4 gap-y-5 gap-x-3 transition-all"></div>
+
+      <!-- App List View -->
+      <div id="listContainer" class="hidden flex flex-col gap-2.5 transition-all"></div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-12 px-4">
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="app-window" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-xs font-bold text-slate-300 mb-1">No applications found</h3>
+        <p class="text-[11px] text-slate-500 mb-4">Try adjusting your search query or category filter.</p>
+        <button onclick="clearSearch()" class="px-3 py-1.5 rounded-xl bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white text-xs font-semibold transition-all">
+          Clear Search Filter
+        </button>
+      </div>
+    </main>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 w-[90%] max-w-[360px]">
+      <div class="glass-dock rounded-3xl p-2 flex items-center justify-around shadow-2xl">
+        <button onclick="filterCategory('all')" class="flex flex-col items-center gap-0.5 text-indigo-400 hover:scale-105 transition-all cursor-pointer">
+          <div class="p-2 rounded-2xl bg-indigo-600/20"><i data-lucide="home" class="w-5 h-5"></i></div>
+        </button>
+        <button onclick="quickLaunchFavorite()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-amber-400 hover:scale-105 transition-all cursor-pointer">
+          <div class="p-2 rounded-2xl hover:bg-slate-800"><i data-lucide="star" class="w-5 h-5"></i></div>
+        </button>
+        <button onclick="openAddAppModal()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-emerald-400 hover:scale-105 transition-all cursor-pointer">
+          <div class="p-2 rounded-2xl hover:bg-slate-800"><i data-lucide="plus-circle" class="w-5 h-5"></i></div>
+        </button>
+        <button onclick="openSettingsModal()" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-indigo-400 hover:scale-105 transition-all cursor-pointer">
+          <div class="p-2 rounded-2xl hover:bg-slate-800"><i data-lucide="sliders" class="w-5 h-5"></i></div>
+        </button>
+      </div>
+    </div>
+
+    <!-- App Action Bottom Sheet Drawer -->
+    <div id="appDrawer" class="hidden absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex flex-col justify-end">
+      <div onclick="closeDrawer()" class="flex-1"></div>
+      <div class="glass-panel rounded-t-[32px] p-6 animate-slide-up border-t border-slate-700/50 relative shadow-2xl">
+        <div class="w-10 h-1 bg-slate-700 rounded-full mx-auto mb-4 cursor-pointer" onclick="closeDrawer()"></div>
+        <div class="flex items-start justify-between gap-3 mb-4">
+          <div class="flex items-center gap-3.5">
+            <div id="drawerIcon" class="w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-xl p-2">
+              <i data-lucide="app-window" class="w-8 h-8"></i>
+            </div>
+            <div>
+              <h2 id="drawerTitle" class="text-base font-extrabold text-white">App Title</h2>
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mt-1">
+                <i data-lucide="check-circle" class="w-2.5 h-2.5"></i> Progressive Web App
+              </span>
+            </div>
+          </div>
+          <button id="drawerFavBtn" onclick="toggleCurrentFavorite()" class="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer">
+            <i data-lucide="star" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <p id="drawerDesc" class="text-xs text-slate-300 leading-relaxed mb-6">App description goes here...</p>
+        <div class="grid grid-cols-2 gap-2.5">
+          <button onclick="copyAppUrl()" class="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all cursor-pointer">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span id="copyBtnText">Copy Link</span>
+          </button>
+          <a id="drawerLaunchBtn" href="#" target="_blank" class="py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all">
+            <i data-lucide="external-link" class="w-4 h-4"></i> Open App
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+      <div class="glass-panel w-full h-full sm:h-auto sm:max-h-[85vh] rounded-none sm:rounded-3xl p-5 flex flex-col shadow-2xl relative overflow-hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+              <i data-lucide="settings" class="w-4 h-4"></i>
+            </div>
+            <h3 class="text-sm font-extrabold text-white">Launcher Setup & Apps <span class="text-[10px] font-mono text-indigo-400 font-semibold ml-1">v2.0</span></h3>
+          </div>
+          <button onclick="closeSettingsModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-4 py-4 no-scrollbar">
+          <div class="bg-slate-900/90 p-3 rounded-2xl border border-slate-800">
+            <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">GitHub Username</label>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-500">https://</span>
+              <input type="text" id="githubUsernameInput" placeholder="arunsringeri318" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:border-indigo-500 outline-none">
+              <span class="text-xs font-semibold text-slate-500">.github.io</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] font-bold uppercase text-slate-400">Manage & Edit Applications</span>
+              <button onclick="openAddAppModal()" class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 bg-indigo-600/20 px-2 py-1 rounded-lg cursor-pointer">
+                <i data-lucide="plus" class="w-3 h-3"></i> Add App
+              </button>
+            </div>
+            <div id="appEditorContainer" class="space-y-2"></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-800 shrink-0">
+          <button onclick="confirmResetApps()" class="px-3 py-2 rounded-xl bg-slate-800 text-slate-400 hover:text-rose-400 font-bold text-xs flex items-center gap-1 cursor-pointer">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+          </button>
+          <button onclick="saveSettings()" class="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1 cursor-pointer">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New App Modal -->
+    <div id="addAppModal" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+      <div class="glass-panel w-full h-full sm:h-auto sm:max-h-[85vh] rounded-none sm:rounded-3xl p-5 flex flex-col shadow-2xl relative overflow-hidden">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800 shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4"></i></div>
+            <h3 class="text-sm font-extrabold text-white">Add New PWA / Web App</h3>
+          </div>
+          <button onclick="closeAddAppModal()" class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto space-y-3 py-4 no-scrollbar text-xs">
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">App Name</label>
+            <input type="text" id="newAppName" placeholder="e.g. My App" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">GitHub Repo Slug or Full URL</label>
+            <input type="text" id="newAppSlug" placeholder="e.g. my-app or https://..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">Category</label>
+              <select id="newAppCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-white outline-none">
+                <option value="finance">💳 Finance</option>
+                <option value="tools">🛠️ Utilities</option>
+                <option value="security">🔐 Security</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">Preset Icon</label>
+              <select id="newAppIcon" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-white outline-none">
+                <option value="globe">🌐 Globe</option>
+                <option value="receipt">🧾 Receipt</option>
+                <option value="tags">🏷️ Tags</option>
+                <option value="wallet">👛 Wallet</option>
+                <option value="shield-check">🛡️ Shield</option>
+                <option value="printer">🖨️ Printer</option>
+                <option value="coins">🪙 Coins</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">Custom Icon Image URL (Optional)</label>
+            <input type="text" id="newAppIconUrl" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold uppercase text-indigo-400 mb-1">Description</label>
+            <textarea id="newAppDesc" rows="2" placeholder="Brief description..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-white outline-none resize-none"></textarea>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-2 pt-3 border-t border-slate-800 shrink-0">
+          <button onclick="closeAddAppModal()" class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs cursor-pointer">Cancel</button>
+          <button onclick="saveNewApp()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs cursor-pointer">Save App</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="hidden absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-3xl p-5 shadow-2xl text-center">
+        <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto mb-3 border border-rose-500/20"><i data-lucide="alert-triangle" class="w-6 h-6"></i></div>
+        <h3 id="confirmTitle" class="text-sm font-bold text-white mb-1">Are you sure?</h3>
+        <p id="confirmMessage" class="text-xs text-slate-400 mb-5">This action cannot be undone.</p>
+        <div class="flex items-center gap-2">
+          <button id="confirmCancelBtn" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold text-xs cursor-pointer">Cancel</button>
+          <button id="confirmActionBtn" class="flex-1 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs cursor-pointer">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const DEFAULT_APPS = [
+      {
+        id: 'quickbill',
+        name: 'Quickbill',
+        slug: 'https://arunsringeri318.github.io/quickbill/',
+        category: 'finance',
+        icon: 'receipt',
+        iconUrl: 'https://www.flaticon.com/icon/1052815',
+        desc: 'Instant invoice generator & mobile POS billing app designed for sales receipt printing.',
+        badge: 'Popular'
+      },
+      {
+        id: 'price',
+        name: 'Price Directory',
+        slug: 'https://arunsringeri318.github.io/Price_directory_v10/',
+        category: 'tools',
+        icon: 'tags',
+        iconUrl: 'https://www.flaticon.com/icon/9398952',
+        desc: 'Vendor catalog price lookup tool for logging item rates and comparing supplier quotes.',
+        badge: 'Catalog'
+      },
+      {
+        id: 'fintrack',
+        name: 'Fintrack',
+        slug: 'https://arunsringeri318.github.io/fintrack/',
+        category: 'finance',
+        icon: 'wallet',
+        iconUrl: 'https://www.flaticon.com/icon/7890493',
+        desc: 'Personal finance budgeter for tracking daily expenses and categorized income streams.',
+        badge: 'Finance'
+      },
+      {
+        id: 'paypulse',
+        name: 'Paypulse',
+        slug: 'https://arunsringeri318.github.io/Arun_Paypulse/',
+        category: 'finance',
+        icon: 'activity',
+        iconUrl: 'https://www.flaticon.com/icon/9493583',
+        desc: 'Financial payments dashboard and pulse tracking manager for daily transactions.',
+        badge: 'Pay'
+      },
+      {
+        id: 'vault',
+        name: 'Pass Vault',
+        slug: 'https://arunsringeri318.github.io/vault/',
+        category: 'security',
+        icon: 'shield-check',
+        iconUrl: 'https://www.flaticon.com/icon/670566',
+        desc: 'Zero-knowledge encrypted offline password vault for safely storing passwords and notes.',
+        badge: 'Security'
+      },
+      {
+        id: 'thermoprint',
+        name: 'Thermoprint',
+        slug: 'https://arunsringeri318.github.io/Thermoprint/',
+        category: 'tools',
+        icon: 'printer',
+        iconUrl: '',
+        desc: 'Thermal printer utility for quick receipt formatting, bill printing, and ESC/POS output.',
+        badge: 'Utility'
+      },
+      {
+        id: 'bullion',
+        name: 'Bullion',
+        slug: 'https://arunsringeri318.github.io/Bullion/',
+        category: 'finance',
+        icon: 'coins',
+        iconUrl: '',
+        desc: 'Precious metals market rate tracker, gold/silver valuation, and bullion calculator.',
+        badge: 'Bullion'
+      }
+    ];
+
+    let currentGithubUser = localStorage.getItem('arun_github_user') || 'arunsringeri318';
+    let appsData = loadAppsData();
+    let userFavorites = JSON.parse(localStorage.getItem('arun_fav_apps') || '["quickbill", "fintrack", "paypulse"]');
+    let currentCategory = 'all';
+    let currentViewMode = 'grid'; // Default layout set to grid (icons) for v2.0
+    let selectedApp = null;
+
+    function loadAppsData() {
+      const stored = localStorage.getItem('arun_apps_list_v9');
+      if (stored) {
+        try { return JSON.parse(stored); } catch (e) { console.error(e); }
+      }
+      return [...DEFAULT_APPS];
+    }
+
+    function saveAppsData() {
+      localStorage.setItem('arun_apps_list_v9', JSON.stringify(appsData));
+    }
+
+    window.onload = function() {
+      updateGreeting();
+      const userInput = document.getElementById('githubUsernameInput');
+      if (userInput) userInput.value = currentGithubUser;
+      switchView('grid');
+      renderApps();
+      lucide.createIcons();
+    };
+
+    function toggleFullscreen() {
+      const docEl = document.documentElement;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+      
+      if (!isFs) {
+        if (docEl.requestFullscreen) docEl.requestFullscreen();
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+        else if (docEl.msRequestFullscreen) docEl.msRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+      }
+    }
+
+    function handleFullscreenChange() {
+      const btn = document.getElementById('fullscreenToggleBtn');
+      if (btn) {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+        btn.innerHTML = `<i data-lucide="${isFs ? 'minimize' : 'maximize'}" class="w-4 h-4"></i>`;
+        lucide.createIcons();
+      }
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    function getAppUrl(app) {
+      if (app.slug.startsWith('http://') || app.slug.startsWith('https://')) return app.slug;
+      return `https://${currentGithubUser}.github.io/${app.slug}/`;
+    }
+
+    function updateGreeting() {
+      const hour = new Date().getHours();
+      let greeting = "Good Day, Arun! 👋";
+      if (hour < 12) greeting = "Good Morning, Arun! ☀️";
+      else if (hour < 18) greeting = "Good Afternoon, Arun! 🚀";
+      else greeting = "Good Evening, Arun! 🌙";
+      const el = document.getElementById('greetingText');
+      if (el) el.textContent = greeting;
+    }
+
+    function getFormattedIconUrl(url) {
+      if (!url) return '';
+      const trimmed = url.trim();
+      const match = trimmed.match(/flaticon\.com\/icon\/(\d+)/i) || trimmed.match(/flaticon\.com\/free-icon\/[^\/]*_?(\d+)/i);
+      if (match && match[1]) {
+        const id = match[1];
+        const prefix = id.length > 3 ? id.slice(0, -3) : id;
+        return `https://cdn-icons-png.flaticon.com/512/${prefix}/${id}.png`;
+      }
+      return trimmed;
+    }
+
+    function renderAppIconHtml(app, sizeClass = 'w-10 h-10') {
+      if (app.iconUrl && app.iconUrl.trim() !== '') {
+        const formattedSrc = getFormattedIconUrl(app.iconUrl);
+        return `<img src="${formattedSrc}" alt="${app.name}" class="${sizeClass} object-contain filter drop-shadow-md" onerror="this.onerror=null; this.outerHTML='<i data-lucide=\\'${app.icon || 'app-window'}\\' class=\\'${sizeClass} text-indigo-400\\'></i>'; lucide.createIcons();">`;
+      }
+      return `<i data-lucide="${app.icon || 'app-window'}" class="${sizeClass} text-indigo-400"></i>`;
+    }
+
+    function renderApps() {
+      const gridContainer = document.getElementById('gridContainer');
+      const listContainer = document.getElementById('listContainer');
+      const emptyState = document.getElementById('emptyState');
+      const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+
+      gridContainer.innerHTML = '';
+      listContainer.innerHTML = '';
+
+      const filtered = appsData.filter(app => {
+        const matchesCategory = 
+          currentCategory === 'all' ? true :
+          currentCategory === 'fav' ? userFavorites.includes(app.id) :
+          app.category === currentCategory;
+
+        const matchesSearch = 
+          app.name.toLowerCase().includes(searchQuery) || 
+          (app.desc && app.desc.toLowerCase().includes(searchQuery)) ||
+          app.slug.toLowerCase().includes(searchQuery);
+
+        return matchesCategory && matchesSearch;
+      });
+
+      document.getElementById('pwaCountText').textContent = `${filtered.length} Mobile App${filtered.length === 1 ? '' : 's'} Available`;
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      filtered.forEach(app => {
+        const isFav = userFavorites.includes(app.id);
+        const appUrl = getAppUrl(app);
+
+        const gridCard = document.createElement('div');
+        gridCard.className = 'flex flex-col items-center cursor-pointer group';
+        gridCard.onclick = () => openDrawer(app);
+        gridCard.innerHTML = `
+          <div class="app-icon-squircle w-16 h-16 flex items-center justify-center relative p-1">
+            ${renderAppIconHtml(app, 'w-12 h-12')}
+            ${isFav ? '<span class="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 text-slate-950 rounded-full flex items-center justify-center text-[9px] font-black shadow"><i data-lucide="star" class="w-2.5 h-2.5 fill-current"></i></span>' : ''}
+          </div>
+          <span class="text-[11px] font-semibold text-slate-200 mt-1.5 text-center truncate w-full px-0.5 group-hover:text-indigo-400 transition-colors">${app.name}</span>
+        `;
+        gridContainer.appendChild(gridCard);
+
+        const listCard = document.createElement('div');
+        listCard.className = 'glass-panel p-3 rounded-2xl flex items-center justify-between gap-3 cursor-pointer hover:border-indigo-500/50 transition-all';
+        listCard.onclick = () => openDrawer(app);
+        listCard.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-14 h-14 flex items-center justify-center shrink-0 p-1">
+              ${renderAppIconHtml(app, 'w-11 h-11')}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <h4 class="text-xs font-bold text-white truncate">${app.name}</h4>
+                <span class="px-1.5 py-0.2 text-[9px] font-extrabold bg-slate-800 text-slate-400 rounded-md uppercase">${app.badge || 'App'}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 truncate mt-0.5">${app.desc || ''}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button onclick="event.stopPropagation(); window.open('${appUrl}', '_blank')" class="p-2 rounded-xl bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer">
+              <i data-lucide="external-link" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(listCard);
+      });
+
+      lucide.createIcons();
+    }
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.getAttribute('data-cat') === cat) {
+          btn.className = 'cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-indigo-600 text-white shadow-md shadow-indigo-600/30 whitespace-nowrap transition-all cursor-pointer';
+        } else {
+          btn.className = 'cat-pill px-3 py-1.5 rounded-xl text-[11px] font-bold bg-slate-800/80 text-slate-400 hover:text-slate-200 whitespace-nowrap transition-all cursor-pointer';
+        }
+      });
+      renderApps();
+    }
+
+    function switchView(mode) {
+      currentViewMode = mode;
+      const grid = document.getElementById('gridContainer');
+      const list = document.getElementById('listContainer');
+      const btnGrid = document.getElementById('viewBtnGrid');
+      const btnList = document.getElementById('viewBtnList');
+
+      if (mode === 'grid') {
+        grid.classList.remove('hidden');
+        list.classList.add('hidden');
+        btnGrid.className = 'p-1.5 rounded-xl text-indigo-400 bg-slate-800 transition-all';
+        btnList.className = 'p-1.5 rounded-xl text-slate-500 hover:text-slate-300 transition-all';
+      } else {
+        grid.classList.add('hidden');
+        list.classList.remove('hidden');
+        btnList.className = 'p-1.5 rounded-xl text-indigo-400 bg-slate-800 transition-all';
+        btnGrid.className = 'p-1.5 rounded-xl text-slate-500 hover:text-slate-300 transition-all';
+      }
+    }
+
+    function handleSearch() {
+      const val = document.getElementById('searchInput').value;
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', val.length === 0);
+      renderApps();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderApps();
+    }
+
+    function openDrawer(app) {
+      selectedApp = app;
+      const drawer = document.getElementById('appDrawer');
+      const iconBox = document.getElementById('drawerIcon');
+      iconBox.innerHTML = renderAppIconHtml(app, 'w-12 h-12');
+      document.getElementById('drawerTitle').textContent = app.name;
+      document.getElementById('drawerDesc').textContent = app.desc || '';
+      document.getElementById('drawerLaunchBtn').href = getAppUrl(app);
+      updateDrawerFavIcon();
+      drawer.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeDrawer() {
+      document.getElementById('appDrawer').classList.add('hidden');
+      selectedApp = null;
+    }
+
+    function toggleCurrentFavorite() {
+      if (!selectedApp) return;
+      const idx = userFavorites.indexOf(selectedApp.id);
+      if (idx > -1) userFavorites.splice(idx, 1);
+      else userFavorites.push(selectedApp.id);
+      localStorage.setItem('arun_fav_apps', JSON.stringify(userFavorites));
+      updateDrawerFavIcon();
+      renderApps();
+    }
+
+    function updateDrawerFavIcon() {
+      if (!selectedApp) return;
+      const isFav = userFavorites.includes(selectedApp.id);
+      const btn = document.getElementById('drawerFavBtn');
+      btn.className = isFav ? 'p-2 rounded-xl bg-slate-800 text-amber-400 transition-colors cursor-pointer' : 'p-2 rounded-xl bg-slate-800 text-slate-500 hover:text-amber-400 transition-colors cursor-pointer';
+      btn.innerHTML = `<i data-lucide="star" class="w-5 h-5 ${isFav ? 'fill-current' : ''}"></i>`;
+      lucide.createIcons();
+    }
+
+    function quickLaunchFavorite() {
+      filterCategory('fav');
+    }
+
+    function copyAppUrl() {
+      if (!selectedApp) return;
+      const temp = document.createElement('input');
+      temp.value = getAppUrl(selectedApp);
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      const btn = document.getElementById('copyBtnText');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy Link', 2000);
+    }
+
+    function openSettingsModal() {
+      document.getElementById('githubUsernameInput').value = currentGithubUser;
+      populateSettingsEditor();
+      document.getElementById('settingsModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+
+    function populateSettingsEditor() {
+      const container = document.getElementById('appEditorContainer');
+      container.innerHTML = '';
+      appsData.forEach(app => {
+        const item = document.createElement('div');
+        item.className = 'bg-slate-950 p-2.5 rounded-xl border border-slate-800 space-y-2';
+        item.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-8 h-8 flex items-center justify-center shrink-0 p-0.5">${renderAppIconHtml(app, 'w-6 h-6')}</div>
+              <span class="text-[11px] font-bold text-slate-300 truncate">${app.name}</span>
+            </div>
+            <button onclick="confirmDeleteApp('${app.id}', '${app.name.replace(/'/g, "\\'")}')" class="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 cursor-pointer">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="edit_name_${app.id}" value="${app.name}" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-white outline-none">
+            <input type="text" id="edit_slug_${app.id}" value="${app.slug}" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-white outline-none">
+          </div>
+          <div>
+            <input type="text" id="edit_iconUrl_${app.id}" value="${app.iconUrl || ''}" placeholder="Icon URL" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-white outline-none">
+          </div>
+        `;
+        container.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    function saveSettings() {
+      const user = document.getElementById('githubUsernameInput').value.trim();
+      if (user) {
+        currentGithubUser = user;
+        localStorage.setItem('arun_github_user', currentGithubUser);
+      }
+      appsData.forEach(app => {
+        const name = document.getElementById(`edit_name_${app.id}`)?.value.trim();
+        const slug = document.getElementById(`edit_slug_${app.id}`)?.value.trim();
+        const iconUrl = document.getElementById(`edit_iconUrl_${app.id}`)?.value.trim();
+        if (name) app.name = name;
+        if (slug) app.slug = slug;
+        if (iconUrl !== undefined) app.iconUrl = iconUrl;
+      });
+      saveAppsData();
+      renderApps();
+      closeSettingsModal();
+    }
+
+    function openAddAppModal() {
+      document.getElementById('newAppName').value = '';
+      document.getElementById('newAppSlug').value = '';
+      document.getElementById('newAppIconUrl').value = '';
+      document.getElementById('newAppDesc').value = '';
+      document.getElementById('addAppModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeAddAppModal() {
+      document.getElementById('addAppModal').classList.add('hidden');
+    }
+
+    function saveNewApp() {
+      const name = document.getElementById('newAppName').value.trim();
+      const slug = document.getElementById('newAppSlug').value.trim();
+      if (!name || !slug) return;
+      appsData.push({
+        id: 'app_' + Date.now(),
+        name,
+        slug,
+        category: document.getElementById('newAppCategory').value,
+        icon: document.getElementById('newAppIcon').value,
+        iconUrl: document.getElementById('newAppIconUrl').value.trim(),
+        desc: document.getElementById('newAppDesc').value.trim() || 'Custom web application.',
+        badge: 'Custom'
+      });
+      saveAppsData();
+      renderApps();
+      closeAddAppModal();
+    }
+
+    function confirmDeleteApp(id, name) {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmTitle').textContent = `Delete ${name}?`;
+      document.getElementById('confirmMessage').textContent = 'Remove this app from your launcher suite.';
+      document.getElementById('confirmCancelBtn').onclick = () => modal.classList.add('hidden');
+      document.getElementById('confirmActionBtn').onclick = () => {
+        modal.classList.add('hidden');
+        appsData = appsData.filter(a => a.id !== id);
+        saveAppsData();
+        renderApps();
+        populateSettingsEditor();
+      };
+      modal.classList.remove('hidden');
+    }
+
+    function confirmResetApps() {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmTitle').textContent = 'Reset Defaults?';
+      document.getElementById('confirmMessage').textContent = 'Restore original apps and default URLs.';
+      document.getElementById('confirmCancelBtn').onclick = () => modal.classList.add('hidden');
+      document.getElementById('confirmActionBtn').onclick = () => {
+        modal.classList.add('hidden');
+        appsData = [...DEFAULT_APPS];
+        saveAppsData();
+        renderApps();
+        populateSettingsEditor();
+      };
+      modal.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
